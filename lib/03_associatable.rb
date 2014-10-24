@@ -92,6 +92,7 @@ module Associatable
     # primary_key: :id
     #  )
     options = HasManyOptions.new(name, self.to_s, options)
+    assoc_options[name] = options
     define_method "#{name}" do
       query = <<-SQL
       SELECT
@@ -114,9 +115,29 @@ module Associatable
     # Wait to implement this in Phase IVa. Modify `belongs_to`, too.
     @assoc_options ||= {}
   end
+
+
+
 end
 
 class SQLObject
   # Mixin Associatable here...
   extend Associatable
+
+  # def self.includes(assoc_name)
+  #   #combine current object with assoc_name
+  #   table_name = assoc_name.to_s.gsub("_"," ").downcase.puralize.underscore
+  #   id_name = assoc_name.to
+
+  #   query = <<-SQL
+  #   SELECT
+    
+  #   FROM
+  #     self.table_name
+  #   LEFT OUTER JOIN
+  #     #{table_name}
+  #   ON
+
+    
+  # end
 end

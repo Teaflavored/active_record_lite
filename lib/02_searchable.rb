@@ -39,4 +39,16 @@ class Relation
     return Relation.new([]) if @objects.empty?
     SQLObject.where(params, @objects.first.class)
   end
+
+  def first
+    @objects.first
+  end
+
+  def length
+    @objects.length
+  end
+
+  def [](idx)
+    @objects[idx]
+  end
 end

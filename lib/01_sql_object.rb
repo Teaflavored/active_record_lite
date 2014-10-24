@@ -2,36 +2,34 @@ require_relative 'db_connection'
 require 'active_support/inflector'
 # NB: the attr_accessor we wrote in phase 0 is NOT used in the rest
 # of this project. It was only a warm up.
-class Relation
 
-  def self.objects
-    @objects
-  end
+#validate method adds a method to a list of all the methods that would be run
 
-  def self.create_relation
-    @objects = []
-  end
 
-  def self.add_to_relation(new_objects)
-    if new_objects.is_a?(Array)
-      @objects += new_objects
-    else
-      @objects += [new_objects]
+module Validations
+
+  def validate(method)
+    define_method "errors" do
+      @errors ||= Hash.new
     end
+    @validate_methods ||= []
+    @validate_methods << method unless @validate_methods.include?(method)
+    # obj = self.new(@attributes)
+    # obj.send(method)
+
   end
 
-  attr_reader :relation_objects
-
-  def initialize(list_of_objects = self.class.objects)
-    @relation_objects = list_of_objects
+  def validate_methods
+    @validate_methods
   end
 
-  def find(id)
-    SQLObject.find(id)
+  def validate_methods_clear
+    @validate_methods = []
   end
 end
 
 class SQLObject 
+  extend Validations
 
   def self.columns
 
@@ -113,7 +111,7 @@ class SQLObject
   end
 
   def attributes
-    # ...
+    self.class.attributes
   end
 
   def attribute_values
@@ -152,8 +150,47 @@ class SQLObject
   end
 
   def save
+    unless self.class.validate_methods.nil?
+      @errors = {}
+      self.class.validate_methods.each do |method|
+        self.send(method)
+      end
+      raise error_msg.to_s unless @errors.keys.empty?
+    # validate :name_cant_be_empty
+      self.class.validate_methods_clear
+    end
+
     return insert if self.id.nil?
     update
   end
 
+
+  def error_msg
+    array_of_msg = []
+    @errors.each do |key, value|
+      array_of_msg << "#{key} #{value}"
+    end
+
+    array_of_msg
+  end
+end
+
+
+
+class Cat < SQLObject
+  finalize!
+  validate :name_cant_be_empty
+  validate :id_cant_be_empty
+
+  def name_cant_be_empty
+    if self.name.nil? || self.name.length == 0
+      errors[:name] = "can't be empty"
+    end
+  end
+
+  def id_cant_be_empty
+    if self.id.nil?
+      errors[:id] = "can't be null"
+    end
+  end
 end
