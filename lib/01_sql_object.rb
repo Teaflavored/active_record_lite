@@ -2,8 +2,36 @@ require_relative 'db_connection'
 require 'active_support/inflector'
 # NB: the attr_accessor we wrote in phase 0 is NOT used in the rest
 # of this project. It was only a warm up.
+class Relation
 
-class SQLObject
+  def self.objects
+    @objects
+  end
+
+  def self.create_relation
+    @objects = []
+  end
+
+  def self.add_to_relation(new_objects)
+    if new_objects.is_a?(Array)
+      @objects += new_objects
+    else
+      @objects += [new_objects]
+    end
+  end
+
+  attr_reader :relation_objects
+
+  def initialize(list_of_objects = self.class.objects)
+    @relation_objects = list_of_objects
+  end
+
+  def find(id)
+    SQLObject.find(id)
+  end
+end
+
+class SQLObject 
 
   def self.columns
 
@@ -62,9 +90,11 @@ class SQLObject
   end
 
   def self.parse_all(results)
+
     results.map do |hash|
       self.new(hash)
     end
+
   end
 
   def self.find(id)
